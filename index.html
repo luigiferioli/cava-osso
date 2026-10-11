@@ -30,8 +30,11 @@ button svg,.semToque{pointer-events:none}
 svg{display:block;overflow:visible}
 #simbolos{position:absolute;width:0;height:0;overflow:hidden}
 #medidor{position:absolute;left:-200px;top:0;width:10px;height:10px;visibility:hidden;overflow:hidden;pointer-events:none}
-#app{position:absolute;left:0;top:0;width:100%;height:100%;background:#BFE8DD;touch-action:none;
+/* #app é o PALCO, sempre em paisagem. O JS (mede) dá o tamanho em px e, em aparelho de toque em retrato, gira 90°;
+   com mouse em janela alta, o palco 16:9 fica centralizado e o fundo do body faz as faixas. */
+#app{position:absolute;left:0;top:0;width:100%;height:100%;background:#BFE8DD;touch-action:none;transform-origin:0 0;
   padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+#app.girado{padding:env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px) env(safe-area-inset-top,0px)}
 #jogo{position:relative;width:100%;height:100%;overflow:hidden;background:#BFE8DD}
 
 /* ---------- botões ---------- */
@@ -50,6 +53,9 @@ svg{display:block;overflow:visible}
 @keyframes pulsaBt{50%{transform:scale(1.08)}}
 .chama{animation:chama .55s ease-in-out infinite}
 @keyframes chama{0%,100%{transform:scale(1);filter:none}50%{transform:scale(1.12);filter:brightness(1.25) drop-shadow(0 0 8px #fff)}}
+/* próximo passo sugerido: pulso bem visível, com brilho */
+.sugere{animation:sugere .8s ease-in-out infinite;z-index:3}
+@keyframes sugere{0%,100%{transform:scale(1);filter:none}50%{transform:scale(1.14);filter:drop-shadow(0 0 calc(var(--u)*4) #fff) drop-shadow(0 0 calc(var(--u)*9) #E8563F)}}
 .treme{animation:treme .45s}
 @keyframes treme{25%{transform:rotate(-8deg)}50%{transform:rotate(7deg)}75%{transform:rotate(-4deg)}}
 
@@ -165,7 +171,9 @@ svg{display:block;overflow:visible}
 #selos{flex:none;width:calc(var(--u)*68);display:flex;flex-direction:column;gap:calc(var(--u)*4)}
 .selo{flex:1;min-height:0;width:100%;border-radius:calc(var(--u)*18);border:calc(var(--u)*3) dashed #7A5A3A99;background:#fff6;display:flex;align-items:center;justify-content:center;position:relative}
 .selo>svg{width:calc(var(--u)*30);height:calc(var(--u)*30);opacity:.45}
-.selo.pista>svg{width:calc(var(--u)*46);height:calc(var(--u)*46);opacity:1;animation:pulsaBt 1.1s ease-in-out infinite}
+.selo>svg.dino{width:calc(var(--u)*46);height:calc(var(--u)*32)}
+.selo.pista{border-color:#F4B63F;background:radial-gradient(circle,#fff 0,#FFE7A3 55%,#fff6 80%)}
+.selo.pista>svg{width:calc(var(--u)*52);height:calc(var(--u)*52);opacity:1;animation:pistaPisca .8s ease-in-out infinite}
 .selo.tem{border:calc(var(--u)*3) solid #5A3A2A;background:#F4B63F;box-shadow:0 0 0 calc(var(--u)*3) #fff inset}
 .selo.tem>svg{width:calc(var(--u)*50);height:calc(var(--u)*50);opacity:1}
 .selo.carimba{animation:carimba .7s cubic-bezier(.3,1.6,.6,1) both}
@@ -181,6 +189,9 @@ svg{display:block;overflow:visible}
 #fichaPalco .anel{fill:#ffffff55;stroke:#fff;stroke-width:4;stroke-dasharray:5 7;stroke-linecap:round;pointer-events:none;animation:anel 1.8s ease-in-out infinite}
 #fichaPalco .anelFora{fill:none;stroke:#5A3A2A;stroke-width:7;stroke-dasharray:5 7;stroke-linecap:round;pointer-events:none;opacity:.55}
 @keyframes anel{50%{transform:scale(1.25);opacity:.6}}
+#fichaPalco.chamaToque .anel{fill:#F4B63Faa;stroke:#E8563F;stroke-width:6;animation-duration:.9s}
+@keyframes anelForte{50%{transform:scale(1.5);opacity:.7}}
+#fichaPalco.chamaToque .anel{animation-name:anelForte}
 #fichaPalco .estrelinha{pointer-events:none}
 #fichaNome{position:absolute;left:0;top:0;min-height:calc(var(--u)*64);padding:calc(var(--u)*8) calc(var(--u)*12) 0;font-size:calc(var(--u)*25);letter-spacing:.04em;-webkit-text-stroke:calc(var(--u)*1) #5A3A2A;text-shadow:0 calc(var(--u)*2) 0 #5A3A2A55;z-index:2;display:flex;align-items:flex-start}
 #estrelas{position:absolute;right:calc(var(--u)*6);top:calc(var(--u)*6);display:flex;align-items:center;gap:calc(var(--u)*3);font-size:calc(var(--u)*18);background:#fff;border:calc(var(--u)*3) solid #5A3A2A;border-radius:calc(var(--u)*14);padding:calc(var(--u)*1) calc(var(--u)*8);pointer-events:none;z-index:2;color:#5A3A2A}
@@ -188,8 +199,12 @@ svg{display:block;overflow:visible}
 #comidas{position:absolute;left:0;right:0;bottom:calc(var(--u)*4);display:flex;justify-content:center;gap:calc(var(--u)*12);z-index:2}
 .comida{width:calc(var(--u)*68);height:calc(var(--u)*68);border-radius:50%;background:#fff;border:calc(var(--u)*3) solid #5A3A2A;box-shadow:0 calc(var(--u)*4) 0 #5A3A2A;padding:calc(var(--u)*6)}
 .comida svg{width:100%;height:100%}
-.comidaVoa{position:fixed;z-index:40;pointer-events:none;left:0;top:0}
+.comidaVoa{position:absolute;z-index:40;pointer-events:none;left:0;top:0}
 #fichaBotoes{flex:none;display:grid;grid-template-columns:repeat(2,calc(var(--u)*66));grid-auto-rows:1fr;gap:calc(var(--u)*5);padding-bottom:calc(var(--u)*4)}
+#btAmigo{grid-column:1 / -1;width:auto;flex-direction:row;gap:calc(var(--u)*5);font-size:calc(var(--u)*11);line-height:1.05;background:#6FD0A0}
+#amigoFig{position:relative;flex:none;width:calc(var(--u)*62);height:calc(var(--u)*44);display:block}
+#amigoFig>svg{width:100%;height:100%}
+#amigoFig .interrog{font-size:calc(var(--u)*30)}
 .sobre{position:absolute;left:calc(var(--u)*3);right:calc(var(--u)*1);top:calc(var(--b) - var(--u)*5);bottom:calc(var(--u)*1);border:calc(var(--u)*3) solid #5A3A2A;border-radius:calc(var(--u)*22);overflow:hidden;z-index:4;background:#BFE8DD}
 .sobre>svg{width:100%;height:100%}
 #regua .seta{animation:quica .7s ease-in-out infinite}
@@ -255,18 +270,13 @@ svg{display:block;overflow:visible}
   background:radial-gradient(circle,#fff 0,#FFE7A3 45%,transparent 70%);animation:pistaPisca .8s ease-in-out infinite}
 #pista svg{width:100%;height:100%}
 @keyframes pistaPisca{0%,100%{transform:scale(1) rotate(-4deg)}50%{transform:scale(1.16) rotate(4deg);filter:brightness(1.15)}}
-#voa{position:fixed;left:0;top:0;z-index:60;pointer-events:none}
-#voa svg{width:100%;height:100%}
+/* a pista mergulha na terra: a terra toma a tela a partir dela (clip-path animado no JS) e abre a escavação */
+#mergulho{position:absolute;inset:0;z-index:30;overflow:hidden;background:#B98550 radial-gradient(ellipse at center,#C99660,#9c6e42);touch-action:none}
+#mergulho>svg{position:absolute}
 
 /* festa */
 #festa{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:50}
 #festa i{position:absolute;top:-30px;width:14px;height:20px;border-radius:4px}
-
-/* vire o celular (retrato) */
-#vire{position:absolute;inset:0;z-index:90;background:#BFE8DD;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5%;padding:8%}
-#vire svg{width:70%;max-height:45%;animation:vire 2.2s ease-in-out infinite}
-@keyframes vire{0%,20%{transform:rotate(0)}55%,85%{transform:rotate(-12deg) scale(1.08)}100%{transform:rotate(0)}}
-#vire p{margin:0;font-size:min(10vw,64px);line-height:1.05;text-align:center;color:#E8563F;-webkit-text-stroke:1.5px #5A3A2A;letter-spacing:.03em}
 
 /* dinossauro: piscada */
 .olho{animation:pisca 4.6s infinite}
@@ -665,6 +675,7 @@ svg{display:block;overflow:visible}
       <button id="btPrato" class="bt quad" data-feito="prato"><svg><use href="#ic-prato"/></svg><span>PRATO</span></button>
       <button id="btMissao" class="bt quad" data-feito="missao"><svg id="icMissao"><use href="#ic-arvore"/></svg><span>MISSÃO</span></button>
       <button id="btQuem" class="bt quad" data-feito="quem"><svg><use href="#ic-interrog"/></svg><span>QUEM?</span></button>
+      <button id="btAmigo" class="bt quad" data-feito="amigo" aria-label="Ajudar o amigo"><span id="amigoFig"></span><span>AJUDAR<br>O AMIGO</span></button>
     </div>
     <div id="regua" class="sobre" hidden></div>
     <div id="globo" class="sobre" hidden></div>
@@ -688,15 +699,9 @@ svg{display:block;overflow:visible}
   </section>
 
   <button id="pista" hidden aria-label="Pista"><svg viewBox="0 0 100 100"><use href="#x-pista"/></svg></button>
+  <div id="mergulho" hidden><svg viewBox="0 0 100 100"><use href="#x-pista"/></svg></div>
+  <div id="festa"></div>
 </div></div>
-
-<div id="voa" hidden><svg viewBox="0 0 100 100"><use href="#x-pista"/></svg></div>
-<div id="festa"></div>
-
-<div id="vire" hidden>
-  <svg viewBox="0 0 120 100"><use href="#x-celular-girar"/></svg>
-  <p>VIRE O CELULAR</p>
-</div>
 
 <div id="adulto" class="adulto" hidden>
   <div class="painel">
@@ -742,7 +747,7 @@ const ORDEM_ABRIR = ['jurassico', 'cretaceo', 'triassico'];   // ordem em que as
 
 /* ---------- frases de interface ---------- */
 const UI = {
-  vire: 'VIRE O CELULAR',
+  vire: 'VIRE O CELULAR',                                    // não é mais usada (o palco gira sozinho); fica no catálogo por causa da gravação
   solo: 'TOQUE NO X PARA CAVAR', soloDino: 'TOQUE EM UM DINO!', soloLivre: 'BRINQUE COM SEUS DINOS!',
   termine: { jurassico: 'TERMINE O JURÁSSICO PRIMEIRO', cretaceo: 'TERMINE O CRETÁCEO PRIMEIRO' },
   abriu: { cretaceo: 'ABRIU O CRETÁCEO!', triassico: 'ABRIU O TRIÁSSICO!' },
@@ -751,7 +756,10 @@ const UI = {
   ficha: 'TOQUE NO DINOSSAURO!', raiox: 'OLHA OS OSSOS!', voce: 'ESSA É VOCÊ!', prato: 'O QUE EU COMO?', tudo: 'VOCÊ DESCOBRIU TUDO!',
   selo: 'GANHOU UM SELO!',
   dicaSelo: ['FAÇA A MISSÃO!', 'DESCUBRA TUDO AQUI!', 'JOGUE QUEM SOU EU!', 'TENTE A MISSÃO DO AMIGO!'],
-  cavePista: 'CAVE A PISTA NO SOLO!',
+  cavePista: 'CAVE A PISTA NO SOLO!',                        // não é mais usada (a pista abre direto a escavação)
+  /* ficha: sugestão do próximo passo (uma por atividade; 'quem' usa UI.quem) e fechamento */
+  sugere: { raiox: 'VEJA O RAIO-X!', regua: 'OLHE A RÉGUA!', globo: 'ONDE ME ACHARAM?', prato: 'ME DÊ COMIDA!', missao: 'VAMOS À MISSÃO!', amigo: 'AJUDE O AMIGO!', fim: 'VAMOS CAVAR MAIS!' },
+  amigoFalta: 'CAVE O AMIGO PRIMEIRO!',
   pista: 'ACHEI UMA PISTA!', toquePista: 'TOQUE NA PISTA!',
   quemVai: 'QUEM VAI TENTAR?', quemMais: 'QUEM MAIS VAI TENTAR?', cave: 'CAVE PARA ME ACHAR!',
   antes: 'EU VIVI ANTES!', depois: 'EU VIVI DEPOIS!',
@@ -1037,24 +1045,30 @@ const GRUPOS = [];
     if (devagar) FRASES[id].devagar = true;
   }
   const G = 'Interface';
-  reg(UI.vire, G, 'tela de retrato');
-  reg(UI.solo, G, 'solo'); reg(UI.soloDino, G, 'solo, sem X para cavar'); reg(UI.soloLivre, G, 'solo, depois do fim');
+  reg(UI.vire, G, 'sem uso nesta versão (antiga tela de retrato)');
+  reg(UI.solo, G, 'solo'); reg(UI.soloDino, G, 'solo, sem X para cavar'); reg(UI.soloLivre, G, 'solo, depois do fim; ficha: tudo feito e os 6 dinos cavados');
   ORDEM_SOLO.forEach(p => reg(PERIODOS[p].nome, G, 'solo: placa da camada', true));
   for (const p in UI.termine) reg(UI.termine[p], G, 'solo: toque em camada fechada');
   for (const p in UI.abriu) reg(UI.abriu[p], G, 'solo: camada nova abriu');
   reg(UI.cavar, G, 'escavação'); reg(UI.ossos, G, 'escavação: achou tudo'); reg(UI.maisOsso, G, 'escavação: dica depois de 6 s parada');
   PECAS.forEach(p => reg(UI.arraste[p], G, 'bancada: passo da montagem'));
-  reg(UI.ficha, G, 'ficha: ao entrar'); reg(UI.raiox, G, 'ficha: raio-X'); reg(UI.voce, G, 'ficha: régua (a menina)');
+  reg(UI.ficha, G, 'ficha: sugestão (faltam toques)'); reg(UI.raiox, G, 'ficha: raio-X'); reg(UI.voce, G, 'ficha: régua (a menina)');
   reg(UI.prato, G, 'ficha: prato'); reg(UI.tudo, G, 'ficha: descobriu tudo'); reg(UI.selo, G, 'ficha: carimbo do selo');
-  ['missão', 'ficha completa', 'quem sou eu', 'missão do vizinho'].forEach((n, i) => reg(UI.dicaSelo[i], G, 'ficha: dica do selo vazio (' + n + ')'));
-  reg(UI.cavePista, G, 'ficha: selo com pista esperando no solo');
-  reg(UI.pista, G, 'pista aparece'); reg(UI.toquePista, G, 'pista aparece');
+  ['missão', 'ficha completa', 'quem sou eu'].forEach((n, i) => reg(UI.dicaSelo[i], G, 'ficha: dica do selo vazio (' + n + ')'));
+  reg(UI.dicaSelo[3], G, 'sem uso nesta versão (a dica do 4º selo agora é AJUDE O AMIGO!)');
+  reg(UI.cavePista, G, 'sem uso nesta versão (a pista abre direto a escavação)');
+  reg(UI.pista, G, 'pista aparece'); reg(UI.toquePista, G, 'pista aparece; ficha: sugestão (pista esperando no selo)');
   reg(UI.quemVai, G, 'missão: escolher o dinossauro'); reg(UI.quemMais, G, 'missão: depois de concluir'); reg(UI.cave, G, 'toque em dinossauro ainda não achado');
   reg(UI.antes, G, 'missão: dino de período mais antigo'); reg(UI.depois, G, 'missão: dino de período mais novo');
-  reg(UI.quem, G, 'quem sou eu'); reg(UI.caveMais, G, 'quem sou eu: menos de 2 dinos'); reg(UI.acertou, G, 'quem sou eu: acertou');
+  reg(UI.quem, G, 'quem sou eu; ficha: sugestão (quem sou eu)'); reg(UI.caveMais, G, 'quem sou eu: menos de 2 dinos; ficha: falta cavar um amigo'); reg(UI.acertou, G, 'quem sou eu: acertou');
   reg(UI.album, G, 'meus dinos');
   UI.fim.forEach(t => reg(t, G, 'festa do fim'));
   reg(UI.testeVoz, G, 'adultos: teste de voz');
+  reg(UI.sugere.raiox, G, 'ficha: sugestão (raio-X)'); reg(UI.sugere.regua, G, 'ficha: sugestão (régua)'); reg(UI.sugere.globo, G, 'ficha: sugestão (globo)');
+  reg(UI.sugere.prato, G, 'ficha: sugestão (prato)'); reg(UI.sugere.missao, G, 'ficha: sugestão (missão)');
+  reg(UI.sugere.amigo, G, 'ficha: sugestão (ajudar o amigo); dica do 4º selo vazio');
+  reg(UI.sugere.fim, G, 'ficha: tudo feito, 4 selos (ainda há dino para cavar)');
+  reg(UI.amigoFalta, G, 'ficha: AJUDAR O AMIGO com o vizinho ainda não cavado');
 
   const GP = 'Prato';
   for (const dieta in PRATO) for (const c in PRATO[dieta]) reg(PRATO[dieta][c][1], GP, (dieta === 'herb' ? 'herbívoro' : 'carnívoro') + ' + ' + c);
@@ -1111,17 +1125,38 @@ const gira = (el, graus, dur, opt) => anima(el, graus.map(g => ({ transform: 'ro
 const pula = (el, alturas, dur) => anima(el, alturas.map(h => ({ transform: 'translateY(' + (-h) + 'px)' })), { duration: dur });
 function sacode(el) { if (!el) return; el.classList.remove('treme'); void el.offsetWidth; el.classList.add('treme'); }
 
-function pontoSVG(svg, ev) {
-  const m = svg.getScreenCTM();
-  if (!m) return { x: 0, y: 0 };
-  const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(m.inverse());
-  return { x: p.x, y: p.y };
+/* COORDENADAS. O palco (#app) pode estar girado 90° (toque em retrato) ou reduzido com faixas (mouse em janela alta).
+   Tudo o que vem da janela (ponteiro, getBoundingClientRect) passa por paraPalco(): é o ÚNICO ponto de conversão
+   de pixels da janela para pixels do palco (#jogo). Daí para dentro o jogo só conhece o palco em paisagem.        */
+const Palco = { modo: 'normal', vw: 640, vh: 360, bx: 0, by: 0, topo: 0, forca: null };
+function paraPalco(cx, cy) {
+  const j = $('#jogo');
+  cx -= Palco.bx; cy -= Palco.by;
+  const x = Palco.modo === 'girado' ? cy : cx, y = Palco.modo === 'girado' ? Palco.vw - cx : cy - Palco.topo;
+  return { x: x - j.offsetLeft, y: y - j.offsetTop };
 }
-function pontoTela(el, x, y) {          // ponto do sistema de coordenadas de um elemento SVG -> pixels da janela
-  const m = el.getScreenCTM();
-  if (!m) return { x: 0, y: 0 };
-  const p = new DOMPoint(x, y).matrixTransform(m);
-  return { x: p.x, y: p.y };
+const pPalco = ev => paraPalco(ev.clientX, ev.clientY);
+function caixaPalco(el) {              // retângulo de um elemento, em pixels do palco
+  const r = el.getBoundingClientRect(), a = paraPalco(r.left, r.top), b = paraPalco(r.right, r.bottom);
+  const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y), w = Math.abs(b.x - a.x), h = Math.abs(b.y - a.y);
+  return { x: x, y: y, w: w, h: h, cx: x + w / 2, cy: y + h / 2 };
+}
+/* viewBox de um <svg> de fora -> palco (conta própria, sem getScreenCTM: não depende de como o navegador trata o giro) */
+function mapaSVG(svg) {
+  const r = caixaPalco(svg), vb = svg.viewBox.baseVal;
+  let al = 6; try { al = svg.preserveAspectRatio.baseVal.align; } catch (_) {}
+  if (!vb || !(vb.width > 0) || !(vb.height > 0)) return { k: 1, ox: r.x, oy: r.y };
+  const k = Math.min(r.w / vb.width, r.h / vb.height) || 1;
+  const fx = al >= 2 ? ((al - 2) % 3) / 2 : 0.5, fy = al >= 2 ? Math.floor((al - 2) / 3) / 2 : 0.5;
+  return { k: k, ox: r.x + (r.w - vb.width * k) * fx - vb.x * k, oy: r.y + (r.h - vb.height * k) * fy - vb.y * k };
+}
+function pontoSVG(svg, ev) {            // ponteiro -> coordenadas do viewBox
+  const m = mapaSVG(svg), p = pPalco(ev);
+  return { x: (p.x - m.ox) / m.k, y: (p.y - m.oy) / m.k };
+}
+function pontoPalco(svg, x, y) {        // coordenadas do viewBox -> pixels do palco
+  const m = mapaSVG(svg);
+  return { x: m.ox + x * m.k, y: m.oy + y * m.k };
 }
 
 function festa(n) {
@@ -1141,25 +1176,29 @@ function festa(n) {
 }
 
 /* ---------- 2. TELA / MEDIDAS ---------- */
-const Tela = { w: 640, h: 360, u: 1, retrato: false };
+const Tela = { w: 640, h: 360, u: 1 };
+function toqueGrosso() { try { return matchMedia('(pointer: coarse)').matches; } catch (_) { return false; } }
+/* O jogo é sempre desenhado em paisagem. Em janela mais alta que larga:
+   - aparelho de toque: o palco inteiro gira 90° e ocupa a tela toda (a criança deita o celular; ao deitar, volta ao normal);
+   - mouse: o palco paisagem (16:9) encolhe para caber na largura, com faixas da cor do fundo em cima e embaixo.        */
 function mede() {
-  const j = $('#jogo');
-  const w = j.clientWidth || innerWidth || 640, h = j.clientHeight || innerHeight || 360;
-  Tela.w = w; Tela.h = h;
-  Tela.u = Math.max(0.4, Math.min(w / 640, h / 360));
+  const corpo = document.body, app = $('#app'), j = $('#jogo');
+  const vw = corpo.clientWidth || innerWidth || 640, vh = corpo.clientHeight || innerHeight || 360;
+  const modo = vh <= vw ? 'normal' : (Palco.forca || (toqueGrosso() ? 'girado' : 'faixas'));
+  let w = vw, h = vh, topo = 0;
+  if (modo === 'girado') { w = vh; h = vw; }
+  else if (modo === 'faixas') { h = Math.round(vw * 9 / 16); topo = Math.round((vh - h) / 2); }
+  const s = app.style;
+  s.width = w + 'px'; s.height = h + 'px'; s.left = '0px'; s.top = topo + 'px';
+  s.transform = modo === 'girado' ? 'translate(' + vw + 'px,0px) rotate(90deg)' : 'none';
+  app.classList.toggle('girado', modo === 'girado');
+  let bx = 0, by = 0;
+  try { const r = corpo.getBoundingClientRect(); bx = r.left; by = r.top; } catch (_) {}
+  Palco.modo = modo; Palco.vw = vw; Palco.vh = vh; Palco.bx = bx; Palco.by = by; Palco.topo = topo;
+  Tela.w = j.clientWidth || w; Tela.h = j.clientHeight || h;
+  Tela.u = Math.max(0.4, Math.min(Tela.w / 640, Tela.h / 360));
   document.documentElement.style.setProperty('--u', Tela.u + 'px');
-  const era = Tela.retrato;
-  Tela.retrato = h > w;
-  $('#vire').hidden = !Tela.retrato;
-  if (Tela.retrato && !era) Vire.entra();
-  return era !== Tela.retrato;
 }
-/* tela "VIRE O CELULAR": cobre tudo em retrato; narrada uma vez (quando o som já estiver liberado) */
-const Vire = {
-  falou: false,
-  entra() { this.fala(); },
-  fala() { if (this.falou || !Tela.retrato || !Voz.ligada) return; this.falou = true; Voz.falar(idFrase(UI.vire)); }
-};
 
 /* ---------- 3. SOM (WebAudio sintetizado, baixinho) ---------- */
 const Som = {
@@ -1514,11 +1553,12 @@ function ir(nome, arg) {
 }
 
 /* ---------- 8. PISTA ----------
-   Quando uma atividade rende pista, o símbolo aparece brilhando na própria cena; ela toca,
-   a pista voa para o SOLO e pousa como um X novo com lupa. O X já fica garantido no estado
-   no momento em que a pista aparece (se ela sair da tela sem tocar, ele estará no solo).      */
+   Quando uma atividade rende pista, o símbolo aparece brilhando na própria cena; ela toca e a pista
+   "mergulha na terra": abre DIRETO a escavação daquele achado. A pista já fica garantida no estado
+   (selo = 1) no momento em que aparece: se ela sair sem tocar, ou sair no meio da escavação, a pista
+   reaparece brilhando na ficha daquele dinossauro, no lugar do selo correspondente.                */
 const Pista = {
-  dino: null, selo: 0, fx: null, fy: null,
+  dino: null, selo: 0, fx: null, fy: null, indo: false,
   /* devolve true se rendeu pista nova; `antes` são as frases ditas antes de a pista aparecer */
   oferece(dk, i, antes, pos, anuncio) {
     const e = estado.dinos[dk];
@@ -1532,7 +1572,7 @@ const Pista = {
   },
   mostra(pos) {
     const b = $('#pista');
-    if (!b.hidden) return;
+    if (!b.hidden || this.indo) return;
     pos = pos || { x: Tela.w * 0.42, y: Tela.h * 0.62 };
     this.fx = pos.x / Tela.w; this.fy = pos.y / Tela.h;
     b.style.left = pos.x + 'px'; b.style.top = pos.y + 'px';
@@ -1540,12 +1580,34 @@ const Pista = {
     anima(b, [{ transform: 'scale(0) rotate(-90deg)' }, { transform: 'scale(1.3) rotate(8deg)' }, { transform: 'scale(1) rotate(0)' }], { duration: 500 });
     Som.festa();
   },
-  toca() {
-    const b = $('#pista');
-    if (b.hidden) return;
-    const r = b.getBoundingClientRect();
+  toca() { const b = $('#pista'); if (!b.hidden) this.mergulha(this.dino, this.selo, b); },
+  /* transição curta: a pista gira e afunda enquanto a terra toma a tela a partir dela; em seguida, a escavação */
+  mergulha(dk, i, el) {
+    if (this.indo) return;
+    this.indo = true;
+    tokFala++; Voz.calar();
     Som.voa();
-    ir('solo', { pousa: { dino: this.dino, selo: this.selo, de: { x: r.left + r.width / 2, y: r.top + r.height / 2, t: r.width } } });
+    const c = caixaPalco(el), m = $('#mergulho'), ic = m.firstElementChild, t = Math.max(c.w, 70 * Tela.u);
+    const em = ' at ' + c.cx + 'px ' + c.cy + 'px)', R = Math.hypot(Tela.w, Tela.h);
+    ic.style.cssText = 'left:' + (c.cx - t / 2) + 'px;top:' + (c.cy - t / 2) + 'px;width:' + t + 'px;height:' + t + 'px';
+    m.style.opacity = 1; m.hidden = false;
+    if (el.id === 'pista') el.style.visibility = 'hidden';
+    anima(m, [{ clipPath: 'circle(' + (t * 0.7) + 'px' + em }, { clipPath: 'circle(' + R + 'px' + em }], { duration: 620, easing: 'ease-in', fill: 'forwards' });
+    anima(ic, [{ transform: 'scale(1.25) rotate(0deg)' }, { transform: 'scale(1.5) rotate(140deg)', offset: 0.3 }, { transform: 'scale(0) rotate(620deg)' }], { duration: 640, easing: 'ease-in', fill: 'forwards' });
+    const g = geracao;
+    const limpa = () => {
+      try { m.getAnimations({ subtree: true }).forEach(a => a.cancel()); } catch (_) {}
+      m.hidden = true; $('#pista').style.visibility = '';
+    };
+    setTimeout(() => {
+      this.indo = false;
+      if (g !== geracao) return limpa();
+      ir('cavar', { tipo: 'extra', dino: dk, selo: i });
+      Som.pof();
+      $('#pista').style.visibility = '';
+      anima(m, [{ opacity: 1 }, { opacity: 0 }], { duration: 320, fill: 'forwards' });
+      setTimeout(limpa, 340);
+    }, 660);
   },
   esconde() { $('#pista').hidden = true; },
   /* a tela mudou de tamanho com a pista à mostra: ela fica no mesmo lugar relativo */
@@ -1582,7 +1644,7 @@ Telas.inicio = {
 };
 
 /* B) SOLO (hub): corte do solo com as 3 camadas */
-const MAX_EXTRAS = 3;                  // X de achado extra mostrados por camada (os outros esperam a vez)
+/* só os X de esqueleto moram no solo; as pistas (achados extras) abrem direto a escavação e, se ficarem pendentes, esperam na ficha */
 Telas.solo = {
   entra(arg) {
     const cx = $('#camadas'); cx.innerHTML = '';
@@ -1606,34 +1668,20 @@ Telas.solo = {
           const b = this.marca(m, 'buraco', '', () => ir('ficha', { dino: dk }));
           b.dataset.dino = dk;
           b.appendChild(criaDino(dk, { estatico: true }));
-          if (!e.missao) b.insertAdjacentHTML('beforeend', usa(DINOS[dk].missao.icone, 'selinho'));
+          if (e.selos.indexOf(1) >= 0) b.insertAdjacentHTML('beforeend', '<svg class="selinho" viewBox="0 0 100 100"><use href="#x-pista"/></svg>');   // pista esperando na ficha
+          else if (!e.missao) b.insertAdjacentHTML('beforeend', usa(DINOS[dk].missao.icone, 'selinho'));
         }
-      }
-      if (aberta) {
-        let pend = [];
-        for (const dk of dinosDe(p)) estado.dinos[dk].selos.forEach((s, i) => { if (s === 1) pend.push({ dk: dk, i: i }); });
-        const ehPouso = x => arg.pousa && arg.pousa.dino === x.dk && arg.pousa.selo === x.i;
-        const pouso = pend.find(ehPouso);
-        if (pouso && pend.indexOf(pouso) >= MAX_EXTRAS) pend = pend.slice(0, MAX_EXTRAS - 1).concat(pouso);   // a que está chegando sempre aparece
-        pend.slice(0, MAX_EXTRAS).forEach(x => {
-          temX = true;
-          const b = this.marca(m, 'x extra', usa('ic-x-lupa'), () => ir('cavar', { tipo: 'extra', dino: x.dk, selo: x.i }));
-          b.dataset.extra = x.dk + '/' + x.i;
-        });
       }
     }
     if (novas.length) salvar();
     $('#btAlbum').classList.toggle('pulsa', !temX && !tudoFeito());
-    /* camada nova: pequena festa e fala (depois de a pista pousar, se houver uma chegando) */
-    const anuncia = () => {
-      if (novas.length) {
-        const p = novas[novas.length - 1];
-        festa(70);
-        $('.camada[data-p="' + p + '"]').classList.add('nova');
-        dizer([UI.abriu[p], UI.solo]);
-      } else if (!checaFim()) dizer(temX ? UI.solo : tudoFeito() ? UI.soloLivre : UI.soloDino);
-    };
-    if (arg.pousa) this.pousa(arg.pousa, anuncia); else anuncia();
+    /* camada nova: pequena festa e fala */
+    if (novas.length) {
+      const p = novas[novas.length - 1];
+      festa(70);
+      $('.camada[data-p="' + p + '"]').classList.add('nova');
+      dizer([UI.abriu[p], UI.solo]);
+    } else if (!checaFim()) dizer(temX ? UI.solo : tudoFeito() ? UI.soloLivre : UI.soloDino);
   },
   marca(pai, classe, html, acao) {
     const b = document.createElement('button');
@@ -1654,35 +1702,6 @@ Telas.solo = {
     if (bt) { bt.classList.add('chama'); depois(4000, () => bt.classList.remove('chama')); }
     dizer(UI.termine[p]);
   },
-  /* a pista chega voando e pousa como um X novo com lupa */
-  pousa(p, entao) {
-    const alvo = $('.marca[data-extra="' + p.dino + '/' + p.selo + '"]') || $('.marca[data-dino="' + p.dino + '"]');
-    const voa = $('#voa');
-    if (!alvo || !p.de) { entao(); return; }
-    const r = alvo.getBoundingClientRect(), ax = r.left + r.width / 2, ay = r.top + r.height / 2, t = p.de.t || 90;
-    alvo.style.visibility = 'hidden';
-    voa.hidden = false;
-    voa.style.width = voa.style.height = t + 'px';
-    const tr = (x, y, s, g) => 'translate(' + (x - t / 2) + 'px,' + (y - t / 2) + 'px) scale(' + s + ') rotate(' + g + 'deg)';
-    const mx = (p.de.x + ax) / 2, my = Math.min(p.de.y, ay) - Tela.h * 0.22;
-    const a = anima(voa, [{ transform: tr(p.de.x, p.de.y, 1, 0) }, { transform: tr(mx, my, 1.5, 200), offset: 0.5 }, { transform: tr(ax, ay, 0.7, 360) }],
-      { duration: 1100, easing: 'ease-in-out', fill: 'forwards' });
-    const g = geracao;
-    let chegou = false;
-    const chega = () => {
-      if (chegou) return;
-      chegou = true;
-      voa.hidden = true;
-      if (a) a.cancel();
-      if (g !== geracao) return;
-      alvo.style.visibility = '';
-      anima(alvo, [{ transform: 'scale(0)' }, { transform: 'scale(1.5)' }, { transform: 'scale(1)' }], { duration: 500 });
-      Som.pof();
-      entao();
-    };
-    if (a) { a.onfinish = chega; setTimeout(chega, 2500); } else chega();
-  },
-  sai() { $('#voa').hidden = true; },
   montar() {
     $('#btAlbum').addEventListener('click', () => { Som.toque(); ir('album'); });
   }
@@ -1698,9 +1717,10 @@ const LIMIAR_OBJETO = 0.75;            // fração dos pontos de amostra limpos 
 Telas.cavar = {
   arg: null, ctx: null, w: 0, h: 0, raio: 40, objs: [], sorte: null, pronto: false, ultimo: null, ultimaPoeira: 0, progresso: 0, relogio: 0, avisou: false,
   entra(arg) {
-    voltarPara = 'solo';
-    this.arg = arg; this.pronto = false; this.ultimo = null; this.avisou = false;
     const esq = arg.tipo === 'esqueleto';
+    /* achado extra (pista): voltar leva à ficha do dinossauro, onde a pista fica esperando no lugar do selo */
+    voltarPara = esq ? 'solo' : () => ir('ficha', { dino: arg.dino });
+    this.arg = arg; this.pronto = false; this.ultimo = null; this.avisou = false;
     /* sorteio do lugar de cada peça (fica guardado para o caso de a tela mudar de tamanho) */
     this.sorte = esq
       ? embaralha([0, 1, 2, 3, 4, 5]).slice(0, PECAS.length).map(cel => ({ cel: cel, rot: sorteio(-14, 14), jx: sorteio(-0.06, 0.06), jy: sorteio(-0.05, 0.05), achado: false }))
@@ -1785,7 +1805,7 @@ Telas.cavar = {
     const t = $('#ossinhos span'); if (t) t.textContent = n + '/' + this.objs.length;
     return n;
   },
-  local(ev) { const r = $('#terra').getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; },
+  local(ev) { const p = pPalco(ev), r = caixaPalco($('#terra')); return { x: p.x - r.x, y: p.y - r.y }; },
   raspa(de, ate, raio) {
     if (this.pronto) return;
     const c = this.ctx;
@@ -1813,7 +1833,7 @@ Telas.cavar = {
   },
   /* ~6 s sem progresso: um brilho suave mostra onde ainda há osso */
   confereParada() {
-    if (telaAtual !== 'cavar' || this.pronto || Tela.retrato) return;
+    if (telaAtual !== 'cavar' || this.pronto) return;
     if (Date.now() - this.progresso < 6000) return;
     const falta = this.objs.filter(o => !o.s.achado);
     if (!falta.length) return;
@@ -1873,7 +1893,7 @@ Telas.cavar = {
     });
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(e => cv.addEventListener(e, () => { this.ultimo = null; }));
   },
-  redimensiona() { if (!this.pronto && !Tela.retrato) this.monta(); }
+  redimensiona() { if (!this.pronto) this.monta(); }
 };
 
 /* D) BANCADA: montar o esqueleto ARRASTANDO as 5 peças, passo a passo */
@@ -1967,13 +1987,14 @@ Telas.bancada = {
     if (!p || p.posta || this.ativa) return;
     ev.preventDefault();
     try { this.svg.setPointerCapture(ev.pointerId); } catch (_) {}
-    this.ativa = { p: p, id: ev.pointerId, tela: { x: ev.clientX, y: ev.clientY }, arrastou: false, pos: null };
+    this.ativa = { p: p, id: ev.pointerId, tela: pPalco(ev), arrastou: false, pos: null };
     p.g.parentNode.appendChild(p.g);                                   // traz a peça para a frente
     clearTimeout(this.ocioso);
   },
   move(ev) {
     const a = this.ativa; if (!a || ev.pointerId !== a.id) return;
-    if (!a.arrastou && Math.hypot(ev.clientX - a.tela.x, ev.clientY - a.tela.y) < 8 * Tela.u) return;
+    const pp = pPalco(ev);
+    if (!a.arrastou && Math.hypot(pp.x - a.tela.x, pp.y - a.tela.y) < 8 * Tela.u) return;
     if (!a.arrastou) { a.arrastou = true; this.semMao(); a.p.pega.classList.remove('vez'); }
     const pt = pontoSVG(this.svg, ev);
     a.pos = { x: pt.x - a.p.centro.x, y: pt.y - a.p.centro.y, s: 1 };   // a peça cresce para o tamanho real e segue o dedo
@@ -2029,9 +2050,9 @@ Telas.bancada = {
 
 /* E) FICHA VIVA */
 Telas.ficha = {
-  dino: null, svg: null, raiox: false, aberto: null, ocupado: false,
+  dino: null, svg: null, raiox: false, aberto: null, ocupado: false, tmSug: 0, ultSug: '', ultSugT: 0,
   entra(arg) {
-    voltarPara = () => { if (this.aberto) this.fecha(); else ir('solo'); };
+    voltarPara = () => { if (this.aberto) { this.fecha(); this.sugere(0); } else ir('solo'); };
     const dk = this.dino = arg.dino, d = DINOS[dk], e = estado.dinos[dk];
     this.raiox = false; this.aberto = null; this.ocupado = false;
     const nome = $('#fichaNome'); nome.textContent = d.nome; nome.style.color = d.cor;
@@ -2044,7 +2065,7 @@ Telas.ficha = {
     palco.appendChild(svg);
     svg.addEventListener('pointerdown', ev => { ev.preventDefault(); this.tocaParte(ev); });
     $('#icMissao').innerHTML = '<use href="#' + d.missao.icone + '"/>';
-    $('#btMissao').classList.toggle('pulsa', !e.missao);
+    this.montaAmigo();
     const cm = $('#comidas'); cm.innerHTML = '';
     COMIDAS.forEach(c => {
       const b = document.createElement('button');
@@ -2052,12 +2073,70 @@ Telas.ficha = {
       b.addEventListener('click', () => this.oferece(c, b));
       cm.appendChild(b);
     });
-    this.marcas(); this.feitos(); this.selos(arg.carimbar);
+    this.marcas(); this.selos(arg.carimbar); this.feitos();
     if (arg.carimbar != null && e.selos[arg.carimbar] === 2) {
-      dizer([UI.selo, d.selos[arg.carimbar].fala], { fim: () => depois(500, checaFim) });
-    } else dizer(UI.ficha);
+      this.diz([UI.selo, d.selos[arg.carimbar].fala], { fim: () => depois(500, () => { if (!checaFim()) this.sugere(1200); }) });
+    } else this.sugere(0, 6000);
   },
-  sai() { this.fecha(); },
+  sai() { this.fecha(); clearTimeout(this.tmSug); this.destaca(null); },
+
+  /* ----- PRÓXIMO PASSO: a ficha sempre sugere (voz, texto e botão pulsando) a próxima atividade ainda não feita ----- */
+  sugestao() {
+    const dk = this.dino, d = DINOS[dk], e = estado.dinos[dk];
+    if (!$('#pista').hidden) return { chave: 'pista', t: UI.toquePista, alvo: null };          // a pista já está piscando na cena
+    const pend = e.selos.indexOf(1);
+    if (pend >= 0) return { chave: 'pista', t: UI.toquePista, alvo: $$('#selos .selo')[pend] };
+    if (quantosToques(dk) < d.toques.length) return { chave: 'toques', t: UI.ficha, alvo: $('#fichaPalco') };
+    for (const c of CAMPOS_FICHA) if (!e[c]) {
+      const abertoPrato = c === 'prato' && this.aberto === 'prato';
+      return { chave: c, t: UI.sugere[c], alvo: abertoPrato ? $$('#comidas .comida') : $('#bt' + c.charAt(0).toUpperCase() + c.slice(1)) };
+    }
+    if (!e.missao || e.selos[0] === 0) return { chave: 'missao', t: UI.sugere.missao, alvo: $('#btMissao') };
+    if (e.selos[2] === 0 && achados().length >= 2) return { chave: 'quem', t: UI.quem, alvo: $('#btQuem') };
+    if (e.selos[3] === 0 && estado.dinos[vizinho(dk)].achado) return { chave: 'amigo', t: UI.sugere.amigo, alvo: $('#btAmigo') };
+    const falta = achados().length < Object.keys(DINOS).length;
+    if (e.selos.every(s => s === 2)) return { chave: 'fim', t: falta ? UI.sugere.fim : UI.soloLivre, alvo: $('#btVoltar') };
+    return { chave: 'cave', t: UI.caveMais, alvo: $('#btVoltar') };                             // falta cavar um amigo para continuar
+  },
+  destaca(alvo) {
+    $$('.sugere').forEach(x => x.classList.remove('sugere'));
+    const palco = $('#fichaPalco');
+    palco.classList.toggle('chamaToque', alvo === palco);
+    if (!alvo || alvo === palco) return;
+    [].concat(alvo).forEach(x => x && x.classList.add('sugere'));
+  },
+  /* fala a sugestão depois de `atraso` ms; a mesma sugestão não é repetida em voz se ela acabou de ouvi-la (o botão segue pulsando) */
+  sugere(atraso, janela) {
+    clearTimeout(this.tmSug);
+    const g = geracao;
+    this.tmSug = setTimeout(() => {
+      if (g !== geracao || telaAtual !== 'ficha' || Pista.indo) return;
+      const s = this.sugestao(), chave = this.dino + '/' + s.t, agora = Date.now();
+      this.destaca(s.alvo);
+      if (chave === this.ultSug && agora - this.ultSugT < (janela || 25000)) { mostraFala(s.t); ultimaFala = [s.t]; return; }   // só o texto, sem voz
+      this.ultSug = chave; this.ultSugT = agora;
+      dizer(s.t);
+    }, atraso || 0);
+  },
+  /* toda fala da ficha passa por aqui: ao terminar (sem ser interrompida), uns segundos de silêncio e vem a sugestão */
+  diz(linhas, opt) {
+    clearTimeout(this.tmSug);
+    const g = geracao;
+    dizer(linhas, { fim: () => { if (g !== geracao || telaAtual !== 'ficha') return; if (opt && opt.fim) opt.fim(); else this.sugere(2500); } });
+  },
+  /* botão AJUDAR O AMIGO: a figura é o vizinho de período; leva ESTE dinossauro à missão do vizinho (é assim que ele ganha o 4º selo) */
+  montaAmigo() {
+    const viz = vizinho(this.dino), achado = estado.dinos[viz].achado, fig = $('#amigoFig');
+    fig.innerHTML = '';
+    fig.appendChild(criaDino(viz, { estatico: true, sombra: !achado }));
+    if (!achado) interrog(fig);
+  },
+  vaiAjudar() {
+    const dk = this.dino, viz = vizinho(dk);
+    Som.toque();
+    if (!estado.dinos[viz].achado) { sacode($('#btAmigo')); this.diz(UI.amigoFalta); return; }
+    ir('missao', { dono: viz, quem: dk, volta: dk });
+  },
   /* marca discreta em cada parte ainda não descoberta; estrelinha nas descobertas; contador */
   marcas() {
     const d = DINOS[this.dino], e = estado.dinos[this.dino], g = this.svg.querySelector('.marcasToque');
@@ -2073,25 +2152,36 @@ Telas.ficha = {
   feitos() {
     const e = estado.dinos[this.dino];
     $$('#fichaBotoes .bt').forEach(b => {
-      const c = b.dataset.feito, ok = c === 'quem' ? e.selos[2] > 0 : !!e[c];
+      const c = b.dataset.feito, ok = c === 'quem' ? e.selos[2] > 0 : c === 'amigo' ? e.selos[3] > 0 : !!e[c];
       const ic = b.querySelector('.feitoIc');
       if (ok && !ic) b.insertAdjacentHTML('beforeend', usa('ic-certo', 'feitoIc'));
       if (!ok && ic) ic.remove();
     });
+    this.destaca(this.sugestao().alvo);               // o destaque acompanha o progresso na hora; a voz vem depois
   },
-  /* 4 selos; o vazio mostra um ícone pequeno de como ganhar, e tocar nele fala uma dica curta */
+  /* 4 selos. Vazio: ícone pequeno de como ganhar (tocar fala a dica e faz pulsar o botão certo).
+     Pista pendente (selo = 1): a pista brilha no lugar do selo; tocar mergulha direto na escavação. */
   selos(carimbar) {
-    const d = DINOS[this.dino], e = estado.dinos[this.dino], caixa = $('#selos');
-    const comoGanhar = [d.missao.icone, 'x-estrela', 'ic-interrog', 'ic-amigo'];
+    const dk = this.dino, d = DINOS[dk], e = estado.dinos[dk], caixa = $('#selos'), viz = vizinho(dk);
+    const comoGanhar = [d.missao.icone, 'x-estrela', 'ic-interrog', null];
+    const dicas = [UI.dicaSelo[0], UI.dicaSelo[1], UI.dicaSelo[2], UI.sugere.amigo];
+    const botoes = ['#btMissao', null, '#btQuem', '#btAmigo'];
     caixa.innerHTML = '';
     d.selos.forEach((s, i) => {
       const b = document.createElement('button'), st = e.selos[i];
       b.className = 'selo' + (st === 2 ? ' tem' : st === 1 ? ' pista' : '');
-      b.innerHTML = usa(st === 2 ? s.s : st === 1 ? 'ic-x-lupa' : comoGanhar[i]);
+      if (st === 2) b.innerHTML = usa(s.s);
+      else if (st === 1) b.innerHTML = '<svg viewBox="0 0 100 100"><use href="#x-pista"/></svg>';
+      else if (comoGanhar[i]) b.innerHTML = usa(comoGanhar[i]);
+      else b.appendChild(criaDino(viz, { estatico: true, sombra: !estado.dinos[viz].achado }));   // 4º selo: a mesma figura do botão AJUDAR O AMIGO
       b.addEventListener('click', () => {
+        if (st === 1) { clearTimeout(this.tmSug); Pista.mergulha(dk, i, b); return; }
         Som.toque();
-        if (st === 2) { anima(b, [{ transform: 'scale(1)' }, { transform: 'scale(1.25) rotate(-8deg)' }, { transform: 'scale(1)' }], { duration: 450 }); dizer(s.fala); }
-        else { sacode(b); dizer(st === 1 ? UI.cavePista : UI.dicaSelo[i]); }
+        if (st === 2) { anima(b, [{ transform: 'scale(1)' }, { transform: 'scale(1.25) rotate(-8deg)' }, { transform: 'scale(1)' }], { duration: 450 }); this.diz(s.fala); return; }
+        sacode(b);
+        const bt = botoes[i] && $(botoes[i]);
+        if (bt) { bt.classList.add('chama'); depois(4000, () => bt.classList.remove('chama')); }
+        this.diz(dicas[i]);
       });
       caixa.appendChild(b);
       if (carimbar === i && st === 2) {
@@ -2104,12 +2194,13 @@ Telas.ficha = {
   /* fala e, se com isso a ficha ficou completa, a pista do 2º selo aparece na própria cena */
   fala(linhas) {
     const dk = this.dino;
-    this.feitos();
+    clearTimeout(this.tmSug);
     if (fichaCompleta(dk) && estado.dinos[dk].selos[1] === 0) {
-      const r = $('#fichaMeio').getBoundingClientRect(), j = $('#jogo').getBoundingClientRect();
-      Pista.oferece(dk, 1, linhas, { x: r.left - j.left + r.width * 0.5, y: r.top - j.top + r.height * 0.6 }, UI.tudo);
-      depois(60, () => this.selos());
-    } else dizer(linhas);
+      const r = caixaPalco($('#fichaMeio'));
+      Pista.oferece(dk, 1, linhas, { x: r.x + r.w * 0.5, y: r.y + r.h * 0.6 }, UI.tudo);
+      this.selos();                                   // a pista também já aparece guardada no lugar do selo
+    } else this.diz(linhas);
+    this.feitos();
   },
   tocaParte(ev) {
     const d = DINOS[this.dino], e = estado.dinos[this.dino], svg = this.svg;
@@ -2144,13 +2235,13 @@ Telas.ficha = {
     $('#fichaMeio').classList.toggle('raiox', this.raiox);
     $('#btRaiox').classList.toggle('ligado', this.raiox);
     Som.toque();
-    if (this.raiox) { this.marcaFeito('raiox'); this.fala(UI.raiox); } else dizer(DINOS[this.dino].nome);
+    if (this.raiox) { this.marcaFeito('raiox'); this.fala(UI.raiox); } else this.diz(DINOS[this.dino].nome);
   },
   abre(qual) {
     const era = this.aberto;
     this.fecha();
     Som.toque();
-    if (era === qual) { dizer(UI.ficha); return false; }
+    if (era === qual) { this.sugere(0); return false; }
     this.aberto = qual;
     $('#bt' + qual.charAt(0).toUpperCase() + qual.slice(1)).classList.add('ligado');
     return true;
@@ -2229,7 +2320,8 @@ Telas.ficha = {
     if (!this.abre('prato')) return;
     if (this.raiox) { this.raiox = false; $('#fichaPalco').classList.remove('raiox'); $('#fichaMeio').classList.remove('raiox'); $('#btRaiox').classList.remove('ligado'); }
     $('#comidas').hidden = false;
-    dizer(UI.prato);
+    this.diz(UI.prato);
+    this.feitos();
   },
   async oferece(c, bt) {
     if (this.ocupado) return;
@@ -2237,13 +2329,13 @@ Telas.ficha = {
     const dk = this.dino, d = DINOS[dk], svg = this.svg;
     const reacao = (d.prato && d.prato[c.id]) || PRATO[d.dieta][c.id];
     Som.toque();
-    const r = bt.getBoundingClientRect(), boca = pontoTela(svg.querySelector('.vivo'), d.boca[0], d.boca[1]), t = r.width * 0.8;
+    const r = caixaPalco(bt), boca = pontoPalco(svg, d.boca[0], d.boca[1]), t = r.w * 0.8;
     const voa = document.createElement('div');
     voa.className = 'comidaVoa'; voa.style.width = voa.style.height = t + 'px'; voa.innerHTML = usa(c.simbolo);
     voa.firstChild.style.cssText = 'width:100%;height:100%';
-    document.body.appendChild(voa);
+    $('#jogo').appendChild(voa);                         // dentro do palco: acompanha o giro
     const tr = (x, y, s) => 'translate(' + (x - t / 2) + 'px,' + (y - t / 2) + 'px) scale(' + s + ')';
-    const de = { x: r.left + r.width / 2, y: r.top + r.height / 2 }, perto = { x: boca.x + t * 0.35, y: boca.y + t * 0.2 };
+    const de = { x: r.cx, y: r.cy }, perto = { x: boca.x + t * 0.35, y: boca.y + t * 0.2 };
     const g = geracao, limpa = () => voa.remove();
     setTimeout(limpa, 4000);
     anima(voa, [{ transform: tr(de.x, de.y, 1) }, { transform: tr(perto.x, perto.y, 0.8) }], { duration: 600, fill: 'forwards', easing: 'ease-out' });
@@ -2267,17 +2359,18 @@ Telas.ficha = {
     setTimeout(limpa, 1600);
   },
   montar() {
-    $('#fichaNome').addEventListener('click', () => { const d = DINOS[this.dino]; Som.toque(); alegria(this.svg, this.dino); dizer([d.nome, d.significado]); });
+    $('#fichaNome').addEventListener('click', () => { const d = DINOS[this.dino]; Som.toque(); alegria(this.svg, this.dino); this.diz([d.nome, d.significado]); });
     $('#btRaiox').addEventListener('click', () => this.alternaRaiox());
     $('#btRegua').addEventListener('click', () => this.abreRegua());
     $('#btGlobo').addEventListener('click', () => this.abreGlobo());
     $('#btPrato').addEventListener('click', () => this.abrePrato());
-    $('#regua').addEventListener('click', () => { this.fecha(); Som.toque(); dizer(UI.ficha); });
-    $('#globo').addEventListener('click', () => { this.fecha(); Som.toque(); dizer(UI.ficha); });
+    $('#regua').addEventListener('click', () => { this.fecha(); Som.toque(); this.sugere(0); });
+    $('#globo').addEventListener('click', () => { this.fecha(); Som.toque(); this.sugere(0); });
+    $('#btAmigo').addEventListener('click', () => this.vaiAjudar());
     $('#btMissao').addEventListener('click', () => { Som.toque(); ir('missao', { dono: this.dino, quem: this.dino }); });
     $('#btQuem').addEventListener('click', () => {
       Som.toque();
-      if (achados().length < 2) { sacode($('#btQuem')); dizer(UI.caveMais); } else ir('quem', { dino: this.dino });
+      if (achados().length < 2) { sacode($('#btQuem')); this.diz(UI.caveMais); } else ir('quem', { dino: this.dino });
     });
   }
 };
@@ -2290,7 +2383,8 @@ Telas.missao = {
   x: 0, larg: 0, viradoEsq: false, feitos: null, ocupado: false, fila: [], concluida: false, rodada: 0, bicho: null,
   entra(arg) {
     this.dono = arg.dono;
-    voltarPara = () => ir('ficha', { dino: arg.dono });
+    const volta = arg.volta || arg.dono;               // quem veio "ajudar o amigo" volta para a própria ficha
+    voltarPara = () => ir('ficha', { dino: volta });
     this.dino = null;
     this.montaCena(); this.montaSeletor(); this.ajusta();
     const m = DINOS[this.dono].missao;
@@ -2366,7 +2460,7 @@ Telas.missao = {
       if (m.tipo === 'caca') this.bicho.firstElementChild.classList.add('alvo');
       else m.alvos.forEach(a => this.el(a.id).classList.add('alvo'));
       dizer([m.problema, m.dica]);
-    } else { tokFala++; Voz.calar(); mostraFala(m.problema); depois(700, () => this.tentaErrado()); }
+    } else { dizer(m.problema); depois(700, () => this.tentaErrado()); }      // o problema é dito em voz alta: dá contexto à reação do amigo
   },
   poeDino(dk, x) {
     const d = DINOS[dk], L = d.lugar, w = d.vb[0] * L.e, h = d.vb[1] * L.e;
@@ -2563,9 +2657,9 @@ Telas.missao = {
     }
   },
   posPista() {
-    const r = $('#cenaJanela').getBoundingClientRect(), j = $('#jogo').getBoundingClientRect();
+    const r = caixaPalco($('#cenaJanela'));
     const meio = this.x + this.larg / 2, fx = meio < 600 ? 0.74 : 0.24;
-    return { x: r.left - j.left + r.width * fx, y: Math.max(r.top - j.top + r.height * 0.38, 70 * Tela.u + 50 * Tela.u) };
+    return { x: r.x + r.w * fx, y: Math.max(r.y + r.h * 0.38, 70 * Tela.u + 50 * Tela.u) };
   },
   conclui() {
     const dono = this.dono, m = DINOS[dono].missao, e = estado.dinos[dono];
@@ -2573,7 +2667,7 @@ Telas.missao = {
     festa(60);
     alegria(this.dsvg, dono);
     if (!e.missao) { e.missao = true; salvar(); }
-    if (!Pista.oferece(dono, 0, [m.fim], this.posPista())) {
+    if (e.selos[0] !== 0 || !Pista.oferece(dono, 0, [m.fim], this.posPista())) {
       dizer([m.fim, UI.quemMais]);
       $('#seletor').classList.add('pulsa'); depois(5000, () => $('#seletor').classList.remove('pulsa'));
     }
@@ -2590,7 +2684,7 @@ Telas.missao = {
       if (p.anda) { this.andador.style.transitionDuration = ms + 'ms'; this.x += p.anda; this.andador.style.transform = 'translate(' + this.x + 'px,0px)'; }
       if (p.acena) gira(junta(svg, d, p.acena), [0].concat(...Array(p.vezes || 2).fill([p.graus, -p.graus]), 0), ms);
       if (p.bicho && this.bicho) { this.bicho.firstElementChild.classList.remove('alvo'); this.poeBicho(p.bicho[0], false, 0); void this.bicho.getBoundingClientRect(); this.poeBicho(p.bicho[1], false, ms); Som.toque(); }
-      if (p.fala) { if (!Pista.oferece(dk, 3, [d.errado.fala], this.posPista())) dizer(d.errado.fala); }
+      if (p.fala) Pista.oferece(dk, 3, [d.errado.fala], this.posPista());          // sem pista nova, só diz a fala
       else if (p.espera !== false) await espera(ms + 40);
     }
     this.ocupado = false;
@@ -2685,8 +2779,7 @@ Telas.quem = {
     b.classList.add('certa'); alegria(b.firstChild, dk);
     $$('.opcao').forEach(o => { if (o !== b) o.classList.add('saiu'); });
     $$('#quemLuzes svg').forEach(s => s.classList.add('acesa'));
-    const r = $('#quemCarta').getBoundingClientRect(), j = $('#jogo').getBoundingClientRect();
-    const pos = { x: r.left - j.left + r.width / 2, y: r.top - j.top + r.height / 2 };
+    const r = caixaPalco($('#quemCarta')), pos = { x: r.cx, y: r.cy };
     if (!Pista.oferece(dk, 2, [UI.acertou, d.nome], pos)) depois(2600, () => { $('#btQuemDeNovo').hidden = false; });
   },
   montar() {
@@ -2768,7 +2861,7 @@ function partida() {
   $('#fala').addEventListener('click', () => { if (ultimaFala.length) dizer(ultimaFala); });
   $('#pista').addEventListener('click', () => Pista.toca());
   /* som só depois de um toque */
-  document.addEventListener('pointerdown', () => { Som.iniciar(); if (!Voz.ligada) { Voz.ligada = true; Voz.carregarVozes(); } Vire.fala(); }, true);
+  document.addEventListener('pointerdown', () => { Som.iniciar(); if (!Voz.ligada) { Voz.ligada = true; Voz.carregarVozes(); } }, true);
   /* nada de menu de contexto, seleção, arrastar imagem ou zoom acidental (a área de adultos pode rolar) */
   const adulto = ev => ev.target && ev.target.closest && ev.target.closest('.adulto');
   ['contextmenu', 'selectstart', 'dragstart', 'gesturestart', 'dblclick'].forEach(e => document.addEventListener(e, ev => { if (!adulto(ev)) ev.preventDefault(); }));
@@ -2778,17 +2871,17 @@ function partida() {
     mede();
     const t = $('#falaTxt').textContent; if (t) mostraFala(t);
     clearTimeout(tm);
-    tm = setTimeout(() => { mede(); const T = Telas[telaAtual]; if (T && T.redimensiona && !Tela.retrato) T.redimensiona(); Pista.reposiciona(); }, 200);
+    tm = setTimeout(() => { mede(); const T = Telas[telaAtual]; if (T && T.redimensiona) T.redimensiona(); Pista.reposiciona(); }, 200);
   };
   window.addEventListener('resize', redimensiona);
   window.addEventListener('orientationchange', redimensiona);
-  if (typeof ResizeObserver !== 'undefined') { try { new ResizeObserver(redimensiona).observe($('#jogo')); } catch (_) {} }
+  if (typeof ResizeObserver !== 'undefined') { try { new ResizeObserver(redimensiona).observe(document.body); } catch (_) {} }
   window.addEventListener('pagehide', () => Voz.calar());
   Estudio.detecta();
   /* atalho de depuração (só com #debug no endereço; não aparece para a criança): window.CAVA */
   if (DEPURA) window.CAVA = {
     get estado() { return estado; }, set estado(e) { estado = e; },
-    DINOS, FRASES, UI, Telas, Tela, Voz, Som, Pista, Estudio, ir, salvar, dizer, estadoNovo,
+    DINOS, FRASES, UI, Telas, Tela, Palco, mede, Voz, Som, Pista, Estudio, ir, salvar, dizer, estadoNovo,
     get tela() { return telaAtual; }, get fala() { return ultimaFala.slice(); },
     /* CAVA.libera('dinos') acha os 6 e conclui as 6 missões (abre as 3 camadas); CAVA.libera('tudo') também conclui fichas e selos */
     libera(quanto) {
