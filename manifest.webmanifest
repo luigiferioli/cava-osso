@@ -3,8 +3,8 @@
  "name": "Cava Osso",
  "short_name": "Cava Osso",
  "lang": "pt-BR",
- "start_url": "./",
- "scope": "./",
+ "start_url": "./index.html",
+ "scope": "./index.html",
  "display": "fullscreen",
  "display_override": [
   "fullscreen",

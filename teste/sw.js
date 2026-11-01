@@ -1,4 +1,4 @@
-const CACHE = 'cava-osso-teste-589901f3ce', CACHE_VOZES = 'cava-osso-teste-vozes', MEU = k => k.indexOf('cava-osso-teste-') === 0;
+const CACHE = 'cava-osso-teste-f82fe866ee', CACHE_VOZES = 'cava-osso-teste-vozes', MEU = k => k.indexOf('cava-osso-teste-') === 0;
 const ARQUIVOS = ['./', 'manifest.webmanifest', 'icone-192.png', 'icone-512.png', 'icone-180.png'];
 const VOZES = ["vozes/1-5dba466c.json","vozes/2-db892ead.json","vozes/3-67b5096e.json","vozes/4-3b9471f3.json","vozes/5-f4537508.json","vozes/6-a83cbc48.json","vozes/7-8a862bbb.json","vozes/8-2579e29a.json"];
 async function reparoRaiz(base) {

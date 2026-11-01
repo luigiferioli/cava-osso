@@ -428,7 +428,10 @@ svg{display:block;overflow:visible}
 #mapaEsq{flex:none;width:calc(var(--u)*76);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:calc(var(--u)*12);padding:calc(var(--u)*4) 0 calc(var(--u)*8)}
 #btMundoAntigo{position:relative;flex:none;width:calc(var(--u)*76);height:calc(var(--u)*76);border-radius:50%;background:#FFF6E0;border:calc(var(--u)*3) solid #5A3A2A;box-shadow:0 calc(var(--u)*4) 0 #5A3A2A;display:flex;align-items:center;justify-content:center;z-index:2}
 #btMundoAntigo svg{width:86%;height:86%}
-#t-mapa.antigo #btMundoAntigo{background:#F4B63F;animation:gira 3s linear infinite}
+/* Rodada 3 (O1): ligado, só o desenho gira (menor, 72%: as setas não passam do círculo); o botão fica parado, com a sombra embaixo.
+   Antes o botão inteiro girava: a caixa girada (até 106 px em 640x360) passava da borda da tela e a sombra rodava em volta */
+#t-mapa.antigo #btMundoAntigo{background:#F4B63F}
+#t-mapa.antigo #btMundoAntigo svg{width:72%;height:72%;animation:gira 3s linear infinite}
 #t-mapa.antigo .filtro{opacity:.45}
 @keyframes gira{to{transform:rotate(360deg)}}
 
@@ -450,7 +453,7 @@ svg{display:block;overflow:visible}
 .globoMapa{position:absolute;inset:0}
 /* Ajustes 4 (6): o aviso da gaveta é um cartão centralizado abaixo da barra (a fala A GAVETA ABRIU! continua visível) */
 #gavetaCartao{position:absolute;left:0;right:0;top:var(--b);bottom:0;z-index:8;display:flex;align-items:center;justify-content:center}
-#gavetaCartao .fundo{position:absolute;inset:0;background:#3A2A1A55}
+#gavetaCartao .fundo{position:absolute;inset:0;background:#3A2A1A80}   /* Rodada 3 (O6): mais escuro (antes 55: na areia da Sala do Mar quase não se via) */
 #gavetaCartao .caixa{position:relative;display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*10);padding:calc(var(--u)*12) calc(var(--u)*26) calc(var(--u)*16);background:#FFF6E0;border:calc(var(--u)*3) solid #5A3A2A;border-radius:calc(var(--u)*26);box-shadow:0 calc(var(--u)*5) 0 #5A3A2A}
 #gavetaPop{display:block;width:calc(var(--u)*180);height:calc(var(--u)*135);animation:pulsaBt 1.1s ease-in-out infinite;filter:drop-shadow(0 0 calc(var(--u)*6) #fff) drop-shadow(0 0 calc(var(--u)*14) #FFD23F)}
 #gavetaSegue{flex:none}
@@ -4791,9 +4794,12 @@ const DINOS = {
       tipo: 'anda', entraCortado: true, camera: true, icone: 'x-pegada-redonda', problema: 'A ÁRVORE ESTÁ LONGE', dica: 'TOQUE NA MARCA!', fim: 'TRÊS PASSOS E CHEGUEI!',
       emOrdem: true, semEspelho: true, efeito: 'pegada', onoma: 'TUM!', som: 'tum', mostra: ['ckb-extra'],
       come: { pose: { pescoco: -8 }, morde: { mandibula: 18 }, alvo: 'ckb-folhas', o: [1000, 104], som: 'nhac' },
+      /* Rodada 3 (O3): a 1ª poça de lama longe da pata da frente (a marca de 64 px ficava em cima dela) e a 2ª no meio do caminho até a 3ª
+         (que não muda: dali ele come na árvore). O 1º passo fica maior (73 -> 154 u), os outros dois iguais (227 u) */
+      afasta: [{ ids: ['ckb-lama-1'], d: [81, 0] }, { ids: ['ckb-lama-2'], d: [40, 0] }],
       alvos: [
-        { id: 'ckb-lama-1', c: [109, 634], x: -487 },
-        { id: 'ckb-lama-2', c: [377, 634], x: -219 },
+        { id: 'ckb-lama-1', c: [190, 634], x: -406 },
+        { id: 'ckb-lama-2', c: [417, 634], x: -179 },
         { id: 'ckb-lama-3', c: [645, 634], x: 49 }
       ]
     }
@@ -6959,6 +6965,7 @@ function dizerJunto(partes, opt) {
 function mostraFala(t) {
   const el = $('#falaTxt'), caixa = $('#falaCaixa'), bt = $('#fala');
   el.textContent = t;
+  bt.style.height = ''; bt.style.alignSelf = '';
   let f = 25 * Tela.u;
   el.style.fontSize = f + 'px';
   while (f > 11 && (el.scrollHeight > caixa.clientHeight + 1 || el.scrollWidth > caixa.clientWidth + 1)) { f -= 1.5; el.style.fontSize = f + 'px'; }
@@ -6968,6 +6975,14 @@ function mostraFala(t) {
     const k = caixa.clientWidth / (el.scrollWidth || 1);
     el.style.whiteSpace = ''; el.style.width = ''; el.style.display = '';
     if (k >= 0.8 && k < 1) { f = Math.floor(f * k * 10) / 10 - 0.3; el.style.fontSize = f + 'px'; }
+  }
+  /* Rodada 3 (O7): no mapa (narração da Pangeia), a frase longa que não cabe numa linha nem com a letra 20% menor não encolhe a letra para
+     caber na barra: a letra fica cheia (25 u) e o balão da fala cresce para baixo, por cima da margem de cima do mapa (só até 3 linhas) */
+  if (telaAtual === 'mapa' && !(typeof Cartao !== 'undefined' && Cartao.aberto) && f < 25 * Tela.u - 0.01 && el.scrollHeight > f * 1.05 * 1.5) {
+    const f0 = f; el.style.fontSize = (25 * Tela.u) + 'px';
+    const extra = el.scrollHeight - caixa.clientHeight;
+    if (el.scrollHeight <= 25 * Tela.u * 1.05 * 3.2) { if (extra > 0) { const h0 = bt.offsetHeight; bt.style.alignSelf = 'flex-start'; bt.style.height = (h0 + extra + 2 * Tela.u) + 'px'; } }
+    else el.style.fontSize = f0 + 'px';
   }
   bt.classList.remove('falando'); void bt.offsetWidth; bt.classList.add('falando');
 }
@@ -8443,12 +8458,14 @@ Telas.missao = {
       if (a.samambaia) this.el(a.samambaia).style.transformOrigin = a.c[0] + 'px 634px';
       if (a.jovem) this.el(a.jovem).style.display = 'none';
     });
-    this.feitos = new Set(); this.ocupado = false; this.fila = []; this.concluida = false; this.dsvg = null; this.rodada = 0; this.rot = null; this.poeira = null; this.raso = null; this.cresc = null; this.camVB = null;
+    this.feitos = new Set(); this.ocupado = false; this.fila = []; this.concluida = false; this.dsvg = null; this.rodada = 0; this.rot = null; this.poeira = null; this.raso = null; this.cresc = null; this.camVB = null; this.camAnda = false; this.pataDir = -1e9;
     const po = this.el('ctx-poeira'); if (po) po.style.opacity = 0;
     this.bicho = m.bicho ? this.el(m.bicho) : null;
     if (this.bicho) { this.bicho.firstElementChild.style.transformOrigin = '0px -12px'; this.poeBicho(this.xEspia(0), false, 0); }
     if (m.nadam) this.peixesNadam(m); else this.paraPeixes();   // Ajustes 4 (4)
     this.marcasAlvo(m);
+    if (this.lado) this.espelhos();                     // Rodada 3 (O2): a cena continua dos lados
+    this.poeVB([0, 0, 1200, 700], 1);
     Pista.esconde();
   },
   /* Fase 3: as páginas do seletor. Cada período ocupa uma página; se não couberem todos com casas de 64 px ou mais (2 colunas e a seta),
@@ -8511,7 +8528,16 @@ Telas.missao = {
        barra vai inteira para cima dela */
     if (bw < Math.max(330 * u, Math.min(precisa, lw))) { s = Math.min(lw / 1200, (H - barraH) / 700); cw = 1200 * s; ch = 700 * s; esq = (lw - cw) / 2; bw = lw; }
     const j = $('#cenaJanela');
+    /* Rodada 3 (O2): a cena menor que a coluna (ela encolhe para a barra ir para cima) não deixa faixa menta dos lados: a janela ocupa a
+       largura toda e a cena continua para os lados, espelhada (o meio, onde tudo acontece, fica igual) */
+    this.lado = this.ladoD = 0;
+    if (esq > 1) {                                     // emendas em pixel inteiro: sem fresta clara de borda meio transparente
+      const W = Math.floor(cw), e0 = Math.floor((lw - W) / 2);
+      s = W / 1200; cw = lw; ch = 700 * s; esq = 0; this.lado = e0 / s; this.ladoD = (lw - W - e0) / s;
+    }
+    this.chPx = ch;
     j.style.left = esq + 'px'; j.style.top = (H - ch) + 'px'; j.style.width = cw + 'px'; j.style.height = ch + 'px';
+    if (this.cena && this.cena.isConnected) { if (this.lado) this.espelhos(); if (this.camVB) this.poeVB(this.camVB); else if (!this.camAnda) this.poeVB([0, 0, 1200, 700], 1); }
     $('#seletor').style.width = col + 'px';
     this.escala = s;
     const b = $('#barra');
@@ -8565,24 +8591,79 @@ Telas.missao = {
     const v = this.dsvg && this.dsvg.querySelector('.vivo'); let bb; try { bb = v.getBBox(); } catch (_) { return; }
     const L = DINOS[this.dino].lugar, esq = Math.floor(this.x + bb.x * L.e - 60);
     if (!(esq < 0)) return;
-    const pre = PERIODOS[cenaDe(this.dono)].pre, ext = svgEl('g', { 'class': 'camExt', transform: 'translate(-1200,0)' });
-    ['ceu', 'fundo', 'chao'].forEach(n => { const g = this.el(pre + '-' + n); if (!g) return; const c = g.cloneNode(true); c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); ext.appendChild(c); });
-    const ceu = this.el(pre + '-ceu'); ceu.parentNode.insertBefore(ext, ceu);
+    this.espelhos();
     const W = 1200 - esq, H = W * 700 / 1200;
     this.camVB = [esq, 700 - H, W, H];
-    this.cena.setAttribute('viewBox', this.camVB.join(' '));
+    /* Rodada 3 (O3): a ponta da pata da frente (x na cena), para a marca da câmera longe não ficar em cima dela */
+    this.pataDir = -1e9;
+    try {
+      const inv = this.cena.getScreenCTM().inverse();
+      v.querySelectorAll('path,ellipse,circle,rect,polygon,use').forEach(p => { const r = p.getBoundingClientRect(); if (r.width * r.height < 4) return;
+        const a = new DOMPoint(r.left, r.top).matrixTransform(inv), b = new DOMPoint(r.right, r.bottom).matrixTransform(inv); if (a.y > 500) this.pataDir = Math.max(this.pataDir, b.x); });
+    } catch (_) {}
+    this.poeVB(this.camVB);
     depois(2600, () => this.cameraPerto());
   },
   cameraPerto() {
     if (!this.camVB) return;
-    const de = this.camVB, svg = this.cena, t0 = performance.now(), ms = 1500; this.camVB = null;
+    const de = this.camVB, svg = this.cena, t0 = performance.now(), ms = 1500; this.camVB = null; this.camAnda = true;
     const passo = agora => {
-      if (svg !== this.cena) return;
+      if (svg !== this.cena) { this.camAnda = false; return; }
       const k = limita((agora - t0) / ms, 0, 1), e = k * k * (3 - 2 * k);
-      svg.setAttribute('viewBox', de.map((v, i) => Math.round((v + ([0, 0, 1200, 700][i] - v) * e) * 10) / 10).join(' '));
-      if (k < 1) requestAnimationFrame(passo); else { const x = svg.querySelector('.camExt'); if (x) x.remove(); }
+      this.poeVB(de.map((v, i) => Math.round((v + ([0, 0, 1200, 700][i] - v) * e) * 10) / 10), k);
+      if (k < 1) requestAnimationFrame(passo); else { this.camAnda = false; if (!this.lado) $$('.camLado', svg).forEach(x => x.remove()); }
     };
     requestAnimationFrame(passo);
+  },
+  /* Rodada 3 (O2): a cena repetida ESPELHADA dos dois lados (céu, fundo e chão, sem ids): emenda sem degrau na borda. Serve à câmera longe
+     do argentinossauro e às faixas dos lados quando a janela é mais larga que a cena (a cena encolhe para a barra ir para cima dela) */
+  espelhos() {
+    if (!this.cena || this.cena.querySelector('.camLado')) return;
+    const pre = PERIODOS[cenaDe(this.dono)].pre, ceu = this.el(pre + '-ceu'); if (!ceu) return;
+    /* a cópia fica por cima das camadas de fundo (abaixo de tudo o mais) e entra uns u na cena, recortada num corte em pixel inteiro
+       (emendasVB): as camadas da arte terminam em 0/1200 com a borda meio transparente (fresta clara) e algumas com contorno vertical
+       (a areia do mar): a cópia cobre essa borda e o contorno dela mesma fica fora do recorte */
+    const base = ['ceu', 'agua', 'fundo', 'chao'].map(n => this.el(pre + '-' + n)).filter(Boolean), depoisDe = base[base.length - 1].nextSibling;
+    ['E', 'D'].forEach(lado => {
+      const fora = svgEl('g', { 'class': 'camLado', 'clip-path': 'url(#camCorte' + lado + ')', 'aria-hidden': 'true' });
+      fora.innerHTML = '<clipPath id="camCorte' + lado + '"><rect y="-5000" height="10000" width="5000"/></clipPath>';
+      const ext = svgEl('g', { 'class': 'camEsp' + lado });
+      /* agua: o mar (cena do mar). No céu, os círculos soltos são o sol: não se repetem (um segundo sol aparecia na beirada) */
+      ['ceu', 'agua', 'fundo', 'chao'].forEach(n => { const g = this.el(pre + '-' + n); if (!g) return; const c = g.cloneNode(true); c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+        if (n === 'ceu') Array.from(c.children).forEach(e => { if (e.tagName === 'circle') e.remove(); });
+        ext.appendChild(c); });
+      fora.appendChild(ext); fora.style.pointerEvents = 'none';
+      ceu.parentNode.insertBefore(fora, depoisDe);
+    });
+    this.emendasVB(700);
+  },
+  /* p: o corte fica 1-2 px dentro da cena (em u: >= 2, cobre metade do contorno de 3 u da arte); o espelho é feito 2 u além */
+  emendasVB(h) {
+    const E = this.cena && this.cena.querySelector('.camEspE'); if (!E) return;
+    const kp = (this.chPx || 300) / h, p = Math.max(1, Math.ceil(2 * kp)) / kp, o = p + 2;
+    E.setAttribute('transform', 'translate(' + (2 * o) + ' 0) scale(-1 1)');
+    this.cena.querySelector('.camEspD').setAttribute('transform', 'translate(' + (2400 - 2 * o) + ' 0) scale(-1 1)');
+    const rE = this.cena.querySelector('#camCorteE rect'), rD = this.cena.querySelector('#camCorteD rect');
+    rE.setAttribute('x', -5000 + p); rD.setAttribute('x', 1200 - p);
+  },
+  /* o viewBox da cena: `c` é o enquadramento (proporção 1200x700) e ganha `lado` (u da cena) dos dois lados, na mesma escala.
+     As marcas acompanham a câmera: na câmera longe ficam do mesmo tamanho na tela (nunca < 64 px); só a próxima aparece (k: 0 = longe,
+     1 = perto; as outras surgem enquanto a câmera volta) */
+  poeVB(c, k) {
+    if (!this.cena) return;
+    const e = (this.lado || 0) * c[3] / 700, e2 = (this.ladoD || 0) * c[3] / 700;
+    this.cena.setAttribute('viewBox', [c[0] - e, c[1], c[2] + e + e2, c[3]].join(' '));
+    this.emendasVB(c[3]);
+    const f = c[2] / 1200, ms = this.marcas || {}, m = DINOS[this.dono].missao;
+    const prox = m.emOrdem ? m.alvos.find(a => !(this.feitos && this.feitos.has(a.id))) : null;
+    Object.keys(ms).forEach(id => {
+      const g = ms[id], b = g.dataset; if (!b.cx || this.el(id + '-nado')) return;
+      const cx = +b.cx, cy = +b.cy, r = +b.d * f / 2;
+      const x = f > 1.001 && this.pataDir > -1e8 ? Math.max(cx, Math.min(this.pataDir + r + 24, +b.cx + r * 0.7)) : cx, y = Math.min(cy, 700 - r - 4);
+      g.setAttribute('transform', f > 1.001 ? 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') scale(' + f.toFixed(4) + ')' : 'translate(' + cx + ' ' + cy + ')');
+      g.style.transition = k == null ? 'none' : '';      // ao afastar, as outras somem na hora (sem piscar)
+      g.style.opacity = prox && prox.id !== id && f > 1.001 ? String(limita((k || 0) * 2 - 0.6, 0, 1)) : '';
+    });
   },
   /* Ajustes 4 (auditoria B1): na própria missão o animal começa INTEIRO na cena (o rabo não sai pela borda). O desenho (.vivo) é medido
      no viewBox dele; espelhado (vindo da direita), conta do outro lado. O argentinossauro (entraCortado) é grande demais: entra só com a
@@ -9288,6 +9369,9 @@ Telas.missao = {
         /* Ajustes 4 (N4): a virada não passa por 0 (o peixe virava um tracinho): a largura vai de 1 a 0,62, troca de lado e volta a 1 */
         const sx = (n.dir < 0 ? -1 : 1) * (0.62 + 0.38 * Math.min(1, Math.abs(n.dir))) * n.S;
         n.N.setAttribute('transform', 'translate(' + n.x.toFixed(1) + ' ' + n.y.toFixed(1) + ') scale(' + sx.toFixed(3) + ' ' + n.S + ') translate(' + (-n.hx) + ' ' + (-n.hy) + ')');
+        /* Rodada 3 (O4): a marca anda com o peixe mas não vira com ele: a escala da virada é desfeita nela (fica sempre redonda, >= 64 px) */
+        const mk = this.marcas && this.marcas[id];
+        if (mk && mk.parentNode === n.N) mk.setAttribute('transform', 'translate(' + n.hx + ' ' + n.hy + ') scale(' + (n.S / sx).toFixed(3) + ' 1)');
         if (n.rabo) n.rabo.setAttribute('transform', 'rotate(' + (14 * Math.sin(agora / (n.preso ? 170 : 115))).toFixed(1) + ' -34 0)');
       }
       requestAnimationFrame(quadro);
@@ -9319,6 +9403,7 @@ Telas.missao = {
       if (!nado) { cx = limita(cx, d / 2 + 4, 1200 - d / 2 - 4); cy = limita(cy, d / 2 + 4, 700 - d / 2 - 4); }
       /* o pulso é SMIL num grupo centrado no alvo (CSS transform-box num <use> escalava em volta do ponto errado) */
       const g = svgEl('g', { 'class': 'a4marca', transform: 'translate(' + cx + ' ' + cy + ')' }), gi = svgEl('g');
+      if (!nado) { g.dataset.cx = cx; g.dataset.cy = cy; g.dataset.d = d; }   // Rodada 3 (O3): para a câmera (poeVB)
       gi.innerHTML = '<use href="#a4-alvo" x="' + (-d / 2) + '" y="' + (-d / 2) + '" width="' + d + '" height="' + d + '"/><animateTransform attributeName="transform" type="scale" values=".94;1.04;.94" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".75;1;.75" dur="2.4s" repeatCount="indefinite"/>';
       g.appendChild(gi);
       const ref = e.parentNode.classList && e.parentNode.classList.contains('afasta') ? e.parentNode : e;
@@ -9808,17 +9893,27 @@ Telas.missao = {
     const t = svgEl('text', { x: x, y: y, 'class': 'onoma' });
     if (k) t.style.fontSize = (84 * k) + 'px';
     t.textContent = txt; t.style.transformOrigin = x + 'px ' + y + 'px';
+    /* Rodada 3 (O5): uma onomatopeia nunca aparece por cima da anterior (ZIIIP... e NHAC! do plesiossauro): a que ainda está na tela
+       pula para a saída (o trecho final, que some subindo) e corre 2x; a nova só entra quando ela acabou de sumir */
+    let atraso = 0;
+    const ant = this.onomaAnt;
+    if (ant && ant.t.isConnected && ant.a && ant.a.playState !== 'finished' && ant.a.playState !== 'idle') {
+      const ct = Math.max(1120, +ant.a.currentTime || 0);
+      ant.a.currentTime = ct; ant.a.playbackRate = 2;
+      atraso = Math.ceil((1400 - ct) / 2) + 20;
+    }
     this.gEfeitos.appendChild(t);
     const a = anima(t, [{ opacity: 0, transform: 'translateY(20px) scale(.5)' }, { opacity: 1, transform: 'translateY(-10px) scale(1.15)', offset: 0.2 },
-      { opacity: 1, transform: 'translateY(-30px) scale(1)', offset: 0.8 }, { opacity: 0, transform: 'translateY(-60px) scale(1)' }], { duration: 1400 });
+      { opacity: 1, transform: 'translateY(-30px) scale(1)', offset: 0.8 }, { opacity: 0, transform: 'translateY(-60px) scale(1)' }], { duration: 1400, delay: atraso, fill: 'backwards' });
     if (a) a.onfinish = () => t.remove(); else setTimeout(() => t.remove(), 1400);
+    this.onomaAnt = { t: t, a: a };
   },
   montar() {
     $('#cenaJanela').addEventListener('pointerdown', ev => this.toqueCena(ev));
   },
   redimensiona() {
     const pg = this.paginas()[this.pagina], k = pg && pg.ks[0]; this.ajusta(); if (k) this.pagina = this.paginaDe(k); this.montaSeletor();
-    if (this.cena && this.marcas) { Object.keys(this.marcas).forEach(id => this.marcas[id].remove()); this.marcasAlvo(DINOS[this.dono].missao); }   // Ajustes 4 (B2): marcas >= 64 px no tamanho novo
+    if (this.cena && this.marcas) { Object.keys(this.marcas).forEach(id => this.marcas[id].remove()); this.marcasAlvo(DINOS[this.dono].missao); if (this.camVB) this.poeVB(this.camVB); }   // Ajustes 4 (B2): marcas >= 64 px no tamanho novo
   },
 };
 
@@ -10778,9 +10873,10 @@ const Gavetas = {
     this.pendente = null; this.volta = volta || telaAtual;
     const b = $('#gavetaPop'), cartao = $('#gavetaCartao'); b.dataset.n = n; cartao.hidden = false;
     anima(cartao.querySelector('.caixa'), [{ transform: 'scale(0) rotate(-20deg)' }, { transform: 'scale(1.12) rotate(4deg)' }, { transform: 'scale(1) rotate(0)' }], { duration: 550 });
-    /* o botão de seguir do brinquedo (MAIS UMA, a seta da próxima rodada) aparece embaixo da gaveta; alguns aparecem logo depois */
-    $('#gavetaSegue').hidden = true;
-    depois(60, () => { $('#gavetaSegue').hidden = !this.segue(); });
+    /* a seta de seguir fica SEMPRE embaixo da gaveta (Rodada 3, O6: antes ela só aparecia se, 60 ms depois, a tela tivesse um botão de
+       seguir à vista — na Sala do Mar, no mapa e no corredor o cartão vinha sem seta). O destino é decidido no toque: o botão de seguir do
+       brinquedo (MAIS UMA, a próxima rodada), se houver; senão só fecha o cartão (a gaveta continua aberta, brilhando no corredor) */
+    $('#gavetaSegue').hidden = false;
     Som.festa();
     dizer(MUSEU.gavetaAbriu);
     return true;
@@ -11379,7 +11475,7 @@ Telas.mapa = {
     }
     dizer(arg.anuncio || MUSEU.nav.mapa);
   },
-  sai() { Mapa.para(); Cartao.fecha(true); tokFala++; },
+  sai() { Mapa.para(); Cartao.fecha(true); tokFala++; const f = $('#fala'); f.style.height = ''; f.style.alignSelf = ''; },   // Rodada 3 (O7): o balão volta à altura de sempre
   volta() {
     if (this.ocupado) return;
     if (Cartao.aberto) { Cartao.fecha(); return; }
